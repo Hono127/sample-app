@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>api test</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
+    <link rel="stylesheet" href="css/reset.css">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="wrap">
+        <div class="container">
+            <div class="header">
+                <p class="header__title">Search Books!</p>
+            </div>
+            <div class="search">
+                <div class="search__text">
+                    <input type="text" id="js-search-word" class="search__text__input" value="" placeholder="検索する">
+                </div>
+                <button id="js-search-button" class="search__btn">検索する</button>
+            </div>
+            <ul class="lists">
+                
+            </ul>
+        </div>
+    </div>
+    <script src="js/jquery.js"></script>
+    <script type="text/javascript">
+    // 楽天ブックスの総合検索APIを使って製作してください。
+    // answerの挙動を良く見てね！
+    $(function() {
+    let $lists = $('.lists'),
+        $jsSearchButton = $('#js-search-button'),
+        pageNum = 0,
+        continueSearch;
+
+    function errorMessage() {
+        $lists.before('<p class="message">検索結果が見つかりませんでした。<br>別のキーワードで検索して下さい。</p>');
+    }
+
+    function resetResult() {
+        $lists.empty();
+        $('.message').remove();
+    }
+
+    function searchResult(data) {
+        let template = data.Items;
+        for(let i = 0; i < template.length; i++) {
+            $lists.prepend(
+            `<li class="lists__item">
+                <div class="lists__item__inner">
+                    <a href="${template[i].Item.itemUrl}" class="lists__item__link" target="_blank">
+                        <img src="${template[i].Item.mediumImageUrl}" class="lists__item__img" alt="${template[i].Item.title}">
+                        <p class="lists__item__detail">作品名：&emsp;${template[i].Item.title}</p>
+                        <p class="lists__item__detail">作者&emsp;：&emsp;${template[i].Item.author}</p>
+                        <p class="lists__item__detail">出版社：&emsp;${template[i].Item.publisherName}</p>
+                    </a>
+                </div>
+            </li>`
+            );
+        }
+    };
+    function searchBooks() {
+        var searchWord = $('#js-search-word').val();
+        if(searchWord.length == 0 || searchWord != continueSearch) {
+            resetResult();
+            pageNum = 0;
+        }
+        pageNum ++;
+        $.ajax({
+            type: 'GET',
+            url: 'https://app.rakuten.co.jp/services/api/BooksTotal/Search/20170404',
+            data: {
+                format: 'json',
+                keyword: searchWord,
+                applicationId: '1013041242368735405',
+                booksGenreId: '001',
+                hits: 20,
+                page:pageNum
+            }
+        })
+        .done(function (data) {
+            let dataLength = data.Items.length;
+            if (dataLength == 0) {
+                if(!$lists.prev().hasClass('message')) {
+                    errorMessage();
+                }
+            } else {
+                searchResult(data);
+            }
+            continueSearch = searchWord;
+        });
+    }
+    
+    function setEvent() {
+        $jsSearchButton.on('click', searchBooks);
+    };
+    setEvent();        
+});
+</script>
+</body>
+</html>

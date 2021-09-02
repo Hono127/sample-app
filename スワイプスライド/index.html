@@ -1,0 +1,126 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="format-detection" content="telephone=no">
+<title></title>
+<link rel="stylesheet" href="css/reset.css">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="swipe-photo">
+    <ul class="swipe-photo-container clearfix">
+        <li class="swipe-photo-item"><img src="img/0.jpg" class="swipe-photo-thumbnail"></li>
+        <li class="swipe-photo-item"><img src="img/1.jpg" class="swipe-photo-thumbnail"></li>
+        <li class="swipe-photo-item"><img src="img/2.jpg" class="swipe-photo-thumbnail"></li>
+        <li class="swipe-photo-item"><img src="img/3.jpg" class="swipe-photo-thumbnail"></li>
+        <li class="swipe-photo-item"><img src="img/4.jpg" class="swipe-photo-thumbnail"></li>
+        <li class="swipe-photo-item"><img src="img/5.jpg" class="swipe-photo-thumbnail"></li>
+    </ul>
+</div>
+<script type="text/javascript" src="js/jquery.js"></script>
+<script type="text/javascript">
+// ここまでたどり着いたあなたは勇者です。
+// 今回やるのはフリックです。
+// 指を動かしている間は .swipe-photo-container が移動し、離したときに一番近い要素の位置までアニメーションします。
+// 挙動はanswerの方を良く見て確認しましょう。
+// x座標の取得方法 
+// function(e) {
+//     e.originalEvent.changedTouches[0].pageX;
+// }
+// onに複数のイベントを貼る方法
+// $(".hoge").on({
+//     "event": function() { },
+//     "event": function() { }
+// });
+// touchstart タッチしたタイミングを取ります。
+// touchmove タッチしたあとの動いてる状態を取ります。(たくさんイベントが発生します。)
+// touchend タッチを離したタイミングを取ります。
+// あとは座標をごにょごにょいじるだけです。配列使います。ちょっと難しいです。
+$(function() {
+    function flickEvent () {
+        let photoWidth = $('.swipe-photo-container').find('li').width(),
+            slideNumber = $('.swipe-photo-container').find('li').length,
+            positionArray = [],
+            currentIndexNumber = 0,
+            startPosition;
+
+        function setPhotoContainer() {
+            $('.swipe-photo-container').width(photoWidth * slideNumber);
+            for(let i = 0; i <= slideNumber; i++) {
+                let position = -1 * i * photoWidth;
+                positionArray.push(position);
+            };
+        };
+
+        function getCoordinate(e) {
+            return e.originalEvent.touches[0].pageX;
+        };
+
+        function slidePhoto() {
+            if(direction === 'right'){
+                currentIndexNumber--;
+            }else if(direction === 'left'){
+                currentIndexNumber++;
+            };
+            if(currentIndexNumber < 0) {
+                currentIndexNumber = 0;
+            }else if(currentIndexNumber >= slideNumber) {
+                currentIndexNumber = slideNumber - 1;
+            };
+            
+            $('.swipe-photo-container').animate({
+                'left': positionArray[currentIndexNumber]
+            }, 500);
+        };
+
+        function swipeDirection(e) {
+            let maxRangeMotion = -1 * photoWidth * (slideNumber - 1),
+                currentMove = startPosition - getCoordinate(e),
+                containerPosition = positionArray[currentIndexNumber] - currentMove;
+
+            if(containerPosition > 0) {
+                $('.swipe-photo-container').css('left', 0);
+            }else if(containerPosition < maxRangeMotion) {
+                $('.swipe-photo-container').css('left', maxRangeMotion);
+            }else {
+                $('.swipe-photo-container').css('left', containerPosition);
+            }
+
+            if(currentMove > photoWidth / 2) {
+                direction = 'left';
+            }else if(currentMove < -1 * photoWidth / 2){
+                direction = 'right';
+            }else {
+                direction = '';
+            }
+        };
+
+        function setEvent() {
+            $('.swipe-photo-container').on({
+                'touchstart': function(e) {
+                    startPosition = getCoordinate(e);
+                },
+                'touchmove': function(e) {
+                    swipeDirection(e);
+                },
+                'touchend': function(){
+                    slidePhoto(direction);
+                }
+            });
+        };
+
+        function init() {
+            setPhotoContainer();
+            setEvent();
+        };
+
+        init();
+    };
+    flickEvent();
+});
+</script>
+</body>
+</html>
